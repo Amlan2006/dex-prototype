@@ -343,4 +343,19 @@ contract DEXTest is Test {
         assertEq(dex.rayverseLiqudity(), initialLiquidity + amount);
         vm.stopPrank();
     }
+    function testcheckPriceSonarTakaToRayverse(uint256 amount) public {
+        amount = 100e18;
+        
+        vm.assume(amount > 0);
+        vm.assume(amount <= sonarTaka.balanceOf(user1));
+        
+        vm.startPrank(user1);
+        sonarTaka.approve(address(dex), amount);
+        
+        // uint256 price = dex.checkPriceSonarTakaToRayverse(amount);
+        // uint256 expectedPrice = (amount * dex.rayverseLiqudity()) / (dex.sonarTakaLiquidity() + amount);
+        console2.log("Price SonarTaka to Rayverse:", dex.checkPriceSonarTakaToRayverse(amount));
+        // assertEq(price, expectedPrice);
+        vm.stopPrank();
+    }
 }

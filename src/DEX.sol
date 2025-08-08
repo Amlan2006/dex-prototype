@@ -7,6 +7,7 @@ import "../src/Rayverse.sol";
 import "../src/SonarTaka.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 // Corrected DEX contract for testing
 contract DEX {
@@ -18,6 +19,9 @@ contract DEX {
     uint256 public sonarTakaLiquidity;
     
     mapping(address => uint256) public balances;
+    mapping(address => uint256) public liquidityRayverse;
+    mapping(address => uint256) public liquiditySonarTaka;
+    // uint256 immutable fees = 0.003;
     
     constructor(address _tokenA, address _tokenB) {
         tokenA = IERC20(_tokenA);
@@ -64,32 +68,55 @@ contract DEX {
     
     function swapRayverseToSonarTaka(uint256 amount) external returns (uint256) {
         require(amount > 0, "Amount must be greater than zero");
-        uint256 numerator = amount * sonarTakaLiquidity;
-        uint256 denominator = rayverseLiqudity + amount;
-        uint256 sonarTakaAmount = numerator / denominator;
-        require(sonarTakaAmount > 0, "Insufficient output");
-        require(sonarTakaAmount <= sonarTakaLiquidity, "Insufficient liquidity");
+        uint256 numerator = amount* 1e18 * sonarTakaLiquidity;
+        uint256 denominator = rayverseLiqudity + amount*1e18;
+        uint256 sonarTakaAmount = Math.mulDiv(numerator,1e18,denominator);
+        //fees calculating
+        uint256 numeratorAfterFees = (Math.mulDiv(amount,997*1e18,1000))* sonarTakaLiquidity;
+        uint256 denominatorAfterFees = rayverseLiqudity + (Math.mulDiv(amount,997* 1e18,1000));
+        uint256 sonarTakaAmountAfterFees = Math.mulDiv(numeratorAfterFees,1e18,denominatorAfterFees);
+        // total fees
+        uint256 totalfees = (sonarTakaAmount*1e18 - sonarTakaAmountAfterFees*1e18);
+        
+
+
+        require(sonarTakaAmountAfterFees > 0, "Insufficient output");
+        require(sonarTakaAmountAfterFees <= sonarTakaLiquidity, "Insufficient liquidity");
         
         tokenA.safeTransferFrom(msg.sender, address(this), amount);
-        tokenB.safeTransfer(msg.sender, sonarTakaAmount);
+        // Transfer fees to the contract
+        tokenB.safeTransferFrom(msg.sender, address(this), totalfees);
+        tokenB.safeTransfer(msg.sender, sonarTakaAmountAfterFees);
+
+        // Update liquidity after fees
+        
         rayverseLiqudity += amount; // Fixed: should be += not -=
-        sonarTakaLiquidity -= sonarTakaAmount;
-        return sonarTakaAmount;
+        sonarTakaLiquidity -= sonarTakaAmountAfterFees;
+        return sonarTakaAmountAfterFees;
     }
     
     function swapSonarTakaToRayverse(uint256 amount) external returns (uint256) {
         require(amount > 0, "Amount must be greater than zero");
         uint256 numerator = amount * rayverseLiqudity;
         uint256 denominator = sonarTakaLiquidity + amount;
-        uint256 rayverseAmount = numerator / denominator;
-        require(rayverseAmount > 0, "Insufficient output");
-        require(rayverseAmount <= rayverseLiqudity, "Insufficient liquidity");
-        
+        uint256 rayverseAmount = Math.mulDiv(numerator,1e18,denominator);
+        //fees calculating
+        uint256 numeratorAfterFees = (Math.mulDiv(amount,997*1e18,1000))* rayverseLiqudity;
+        uint256 denominatorAfterFees = sonarTakaLiquidity + (Math.mulDiv(amount,997*1e18,1000));
+        uint256 rayverseAmountAfterFees = Math.mulDiv(numeratorAfterFees,1e18,denominatorAfterFees);
+        require(rayverseAmountAfterFees > 0, "Insufficient output");
+        require(rayverseAmountAfterFees <= rayverseLiqudity, "Insufficient liquidity");
+        //total fees
+        uint256 totalfees = (rayverseAmount*1e18 - rayverseAmountAfterFees*1e18);
+
+
         tokenB.safeTransferFrom(msg.sender, address(this), amount);
-        tokenA.safeTransfer(msg.sender, rayverseAmount);
+        // Transfer fees to the contract
+        tokenA.safeTransferFrom(msg.sender, address(this), totalfees);
+        tokenA.safeTransfer(msg.sender, rayverseAmountAfterFees);
         sonarTakaLiquidity += amount; // Fixed: should be += not -=
-        rayverseLiqudity -= rayverseAmount;
-        return rayverseAmount;
+        rayverseLiqudity -= rayverseAmountAfterFees;
+        return rayverseAmountAfterFees;
     }
     
     // Getter functions to match original interface
@@ -114,15 +141,15 @@ contract DEX {
     }
     function checkPriceRayverseToSonarTaka(uint256 amount) external view returns (uint256) {
         require(rayverseLiqudity > 0 && sonarTakaLiquidity > 0, "Liquidity not initialized");
-        uint256 numerator = amount * sonarTakaLiquidity;
-        uint256 denominator = rayverseLiqudity + amount;
-        return numerator / denominator;
+        // uint256 numerator = amount * sonarTakaLiquidity;
+        // uint256 denominator = rayverseLiqudity + amount;
+        return Math.mulDiv(rayverseLiqudity, 1e18, sonarTakaLiquidity) * amount ; // Using Math.mulDiv for precision
     }
     function checkPriceSonarTakaToRayverse(uint256 amount) external view returns (uint256) {
         require(rayverseLiqudity > 0 && sonarTakaLiquidity > 0, "Liquidity not initialized");
-        uint256 numerator = amount * rayverseLiqudity;
-        uint256 denominator = sonarTakaLiquidity + amount;
-        return numerator / denominator;
+        // uint256 numerator = amount * rayverseLiqudity;
+        // uint256 denominator = sonarTakaLiquidity + amount;
+        return Math.mulDiv(sonarTakaLiquidity,1e18, rayverseLiqudity)* amount ; // Using Math.mulDiv for precision
     }
    
 }

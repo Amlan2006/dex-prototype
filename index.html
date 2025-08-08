@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rayverse DEX - Decentralized Exchange</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.10.0/web3.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -392,6 +393,10 @@
             background: rgba(239, 68, 68, 0.9);
         }
 
+        .toast.info {
+            background: rgba(59, 130, 246, 0.9);
+        }
+
         .token-selector {
             display: flex;
             align-items: center;
@@ -441,7 +446,7 @@
                         <div class="token-icon">R</div>
                         <span>Rayverse (RAY)</span>
                     </div>
-                    <input type="number" class="form-input" id="swapFromAmount" placeholder="0.0">
+                    <input type="number" class="form-input" id="swapFromAmount" placeholder="0.0" step="0.000001">
                 </div>
                 
                 <div class="swap-icon">
@@ -467,11 +472,11 @@
                 <h2 class="card-title">Add Liquidity</h2>
                 <div class="form-group">
                     <label class="form-label">Rayverse Amount</label>
-                    <input type="number" class="form-input" id="rayverseAmount" placeholder="0.0">
+                    <input type="number" class="form-input" id="rayverseAmount" placeholder="0.0" step="0.000001">
                 </div>
                 <div class="form-group">
                     <label class="form-label">SonarTaka Amount</label>
-                    <input type="number" class="form-input" id="sonarTakaAmount" placeholder="0.0">
+                    <input type="number" class="form-input" id="sonarTakaAmount" placeholder="0.0" step="0.000001">
                 </div>
                 <div style="display: flex; gap: 10px;">
                     <button class="btn" style="flex: 1;" onclick="addRayverseLiquidity()">Add Rayverse</button>
@@ -524,343 +529,379 @@
         let isConnecting = false;
 
         // Contract configuration
-        const CONTRACT_ADDRESS = '0x77c7E3905c21177Be97956c6620567596492C497'; // Replace with your deployed contract address
-        const RAYVERSE_ADDRESS = '0x7ef8E99980Da5bcEDcF7C10f41E55f759F6A174B'; // Replace with Rayverse token address
-        const SONARTAKA_ADDRESS = '0x82B769500E34362a76DF81150e12C746093D954F'; // Replace with SonarTaka token address
+        const CONTRACT_ADDRESS = '0x8438Ad1C834623CfF278AB6829a248E37C2D7E3f'; 
+        const RAYVERSE_ADDRESS = '0x663F3ad617193148711d28f5334eE4Ed07016602'; 
+        const SONARTAKA_ADDRESS = '0x2E983A1Ba5e8b38AAAeC4B440B9dDcFBf72E15d1'; 
 
-        // Contract ABI (simplified - you'll need to replace with your full ABI)
+        // Contract ABI
         const CONTRACT_ABI = [
-            
-                {
-                    "inputs": [
-                        {
-                            "internalType": "address",
-                            "name": "_tokenA",
-                            "type": "address"
-                        },
-                        {
-                            "internalType": "address",
-                            "name": "_tokenB",
-                            "type": "address"
-                        }
-                    ],
-                    "stateMutability": "nonpayable",
-                    "type": "constructor"
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "address",
-                            "name": "token",
-                            "type": "address"
-                        }
-                    ],
-                    "type": "error",
-                    "name": "SafeERC20FailedOperation"
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "amount",
-                            "type": "uint256"
-                        }
-                    ],
-                    "stateMutability": "nonpayable",
-                    "type": "function",
-                    "name": "addLiquidityForRayverse"
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "amount",
-                            "type": "uint256"
-                        }
-                    ],
-                    "stateMutability": "nonpayable",
-                    "type": "function",
-                    "name": "addLiquidityForSonarTaka"
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "address",
-                            "name": "",
-                            "type": "address"
-                        }
-                    ],
-                    "stateMutability": "view",
-                    "type": "function",
-                    "name": "balances",
-                    "outputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "",
-                            "type": "uint256"
-                        }
-                    ]
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "amount",
-                            "type": "uint256"
-                        }
-                    ],
-                    "stateMutability": "view",
-                    "type": "function",
-                    "name": "checkPriceRayverseToSonarTaka",
-                    "outputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "",
-                            "type": "uint256"
-                        }
-                    ]
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "amount",
-                            "type": "uint256"
-                        }
-                    ],
-                    "stateMutability": "view",
-                    "type": "function",
-                    "name": "checkPriceSonarTakaToRayverse",
-                    "outputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "",
-                            "type": "uint256"
-                        }
-                    ]
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "address",
-                            "name": "user",
-                            "type": "address"
-                        }
-                    ],
-                    "stateMutability": "view",
-                    "type": "function",
-                    "name": "checkRayverseBalance",
-                    "outputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "",
-                            "type": "uint256"
-                        }
-                    ]
-                },
-                {
-                    "inputs": [],
-                    "stateMutability": "view",
-                    "type": "function",
-                    "name": "checkRayverseLiquidity",
-                    "outputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "",
-                            "type": "uint256"
-                        }
-                    ]
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "address",
-                            "name": "user",
-                            "type": "address"
-                        }
-                    ],
-                    "stateMutability": "view",
-                    "type": "function",
-                    "name": "checkSonarTakaBalance",
-                    "outputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "",
-                            "type": "uint256"
-                        }
-                    ]
-                },
-                {
-                    "inputs": [],
-                    "stateMutability": "view",
-                    "type": "function",
-                    "name": "checkSonarTakaLiquidity",
-                    "outputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "",
-                            "type": "uint256"
-                        }
-                    ]
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "_rayverseAmount",
-                            "type": "uint256"
-                        },
-                        {
-                            "internalType": "uint256",
-                            "name": "_sonarTakaAmount",
-                            "type": "uint256"
-                        }
-                    ],
-                    "stateMutability": "nonpayable",
-                    "type": "function",
-                    "name": "initializeLiquidity"
-                },
-                {
-                    "inputs": [],
-                    "stateMutability": "view",
-                    "type": "function",
-                    "name": "rayverse",
-                    "outputs": [
-                        {
-                            "internalType": "address",
-                            "name": "",
-                            "type": "address"
-                        }
-                    ]
-                },
-                {
-                    "inputs": [],
-                    "stateMutability": "view",
-                    "type": "function",
-                    "name": "rayverseLiqudity",
-                    "outputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "",
-                            "type": "uint256"
-                        }
-                    ]
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "amount",
-                            "type": "uint256"
-                        }
-                    ],
-                    "stateMutability": "nonpayable",
-                    "type": "function",
-                    "name": "removeLiquidityForRayverse"
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "amount",
-                            "type": "uint256"
-                        }
-                    ],
-                    "stateMutability": "nonpayable",
-                    "type": "function",
-                    "name": "removeLiquidityForSonarTaka"
-                },
-                {
-                    "inputs": [],
-                    "stateMutability": "view",
-                    "type": "function",
-                    "name": "sonarTaka",
-                    "outputs": [
-                        {
-                            "internalType": "address",
-                            "name": "",
-                            "type": "address"
-                        }
-                    ]
-                },
-                {
-                    "inputs": [],
-                    "stateMutability": "view",
-                    "type": "function",
-                    "name": "sonarTakaLiquidity",
-                    "outputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "",
-                            "type": "uint256"
-                        }
-                    ]
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "amount",
-                            "type": "uint256"
-                        }
-                    ],
-                    "stateMutability": "nonpayable",
-                    "type": "function",
-                    "name": "swapRayverseToSonarTaka",
-                    "outputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "",
-                            "type": "uint256"
-                        }
-                    ]
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "amount",
-                            "type": "uint256"
-                        }
-                    ],
-                    "stateMutability": "nonpayable",
-                    "type": "function",
-                    "name": "swapSonarTakaToRayverse",
-                    "outputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "",
-                            "type": "uint256"
-                        }
-                    ]
-                },
-                {
-                    "inputs": [],
-                    "stateMutability": "view",
-                    "type": "function",
-                    "name": "tokenA",
-                    "outputs": [
-                        {
-                            "internalType": "contract IERC20",
-                            "name": "",
-                            "type": "address"
-                        }
-                    ]
-                },
-                {
-                    "inputs": [],
-                    "stateMutability": "view",
-                    "type": "function",
-                    "name": "tokenB",
-                    "outputs": [
-                        {
-                            "internalType": "contract IERC20",
-                            "name": "",
-                            "type": "address"
-                        }
-                    ]
-                }
-            
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "_tokenA",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "_tokenB",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "token",
+                        "type": "address"
+                    }
+                ],
+                "type": "error",
+                "name": "SafeERC20FailedOperation"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function",
+                "name": "addLiquidityForRayverse"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function",
+                "name": "addLiquidityForSonarTaka"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function",
+                "name": "balances",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ]
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function",
+                "name": "checkPriceRayverseToSonarTaka",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ]
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function",
+                "name": "checkPriceSonarTakaToRayverse",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ]
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "user",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function",
+                "name": "checkRayverseBalance",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ]
+            },
+            {
+                "inputs": [],
+                "stateMutability": "view",
+                "type": "function",
+                "name": "checkRayverseLiquidity",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ]
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "user",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function",
+                "name": "checkSonarTakaBalance",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ]
+            },
+            {
+                "inputs": [],
+                "stateMutability": "view",
+                "type": "function",
+                "name": "checkSonarTakaLiquidity",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ]
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "_rayverseAmount",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "_sonarTakaAmount",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function",
+                "name": "initializeLiquidity"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function",
+                "name": "liquidityRayverse",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ]
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function",
+                "name": "liquiditySonarTaka",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ]
+            },
+            {
+                "inputs": [],
+                "stateMutability": "view",
+                "type": "function",
+                "name": "rayverse",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ]
+            },
+            {
+                "inputs": [],
+                "stateMutability": "view",
+                "type": "function",
+                "name": "rayverseLiqudity",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ]
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function",
+                "name": "removeLiquidityForRayverse"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function",
+                "name": "removeLiquidityForSonarTaka"
+            },
+            {
+                "inputs": [],
+                "stateMutability": "view",
+                "type": "function",
+                "name": "sonarTaka",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ]
+            },
+            {
+                "inputs": [],
+                "stateMutability": "view",
+                "type": "function",
+                "name": "sonarTakaLiquidity",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ]
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function",
+                "name": "swapRayverseToSonarTaka",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ]
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function",
+                "name": "swapSonarTakaToRayverse",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ]
+            },
+            {
+                "inputs": [],
+                "stateMutability": "view",
+                "type": "function",
+                "name": "tokenA",
+                "outputs": [
+                    {
+                        "internalType": "contract IERC20",
+                        "name": "",
+                        "type": "address"
+                    }
+                ]
+            },
+            {
+                "inputs": [],
+                "stateMutability": "view",
+                "type": "function",
+                "name": "tokenB",
+                "outputs": [
+                    {
+                        "internalType": "contract IERC20",
+                        "name": "",
+                        "type": "address"
+                    }
+                ]
+            }
         ];
 
         const ERC20_ABI = [
@@ -898,10 +939,8 @@
         // Handle wallet connection/disconnection
         async function handleWalletConnection() {
             if (isConnected) {
-                // Disconnect wallet
                 disconnectWallet();
             } else {
-                // Connect wallet
                 await connectWallet();
             }
         }
@@ -919,7 +958,6 @@
                 isConnecting = true;
                 updateConnectButton();
 
-                // Request account access
                 await window.ethereum.request({ method: 'eth_requestAccounts' });
                 web3 = new Web3(window.ethereum);
                 const accounts = await web3.eth.getAccounts();
@@ -930,17 +968,14 @@
 
                 userAccount = accounts[0];
                 
-                // Initialize contracts
                 contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
                 rayverseContract = new web3.eth.Contract(ERC20_ABI, RAYVERSE_ADDRESS);
                 sonarTakaContract = new web3.eth.Contract(ERC20_ABI, SONARTAKA_ADDRESS);
                 
-                // Update UI
                 isConnected = true;
                 updateWalletStatus();
                 updateConnectButton();
                 
-                // Setup event listeners for account changes
                 window.ethereum.on('accountsChanged', handleAccountsChanged);
                 window.ethereum.on('chainChanged', handleChainChanged);
                 
@@ -965,7 +1000,6 @@
 
         // Disconnect wallet
         function disconnectWallet() {
-            // Reset state
             web3 = null;
             contract = null;
             userAccount = null;
@@ -973,13 +1007,11 @@
             sonarTakaContract = null;
             isConnected = false;
             
-            // Remove event listeners
             if (window.ethereum && window.ethereum.removeListener) {
                 window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
                 window.ethereum.removeListener('chainChanged', handleChainChanged);
             }
             
-            // Update UI
             updateWalletStatus();
             updateConnectButton();
             clearUserData();
@@ -1001,7 +1033,6 @@
 
         // Handle chain changes
         function handleChainChanged(chainId) {
-            // Reload the page when chain changes
             window.location.reload();
         }
 
@@ -1065,26 +1096,35 @@
                 const refreshBtn = document.getElementById('refreshBtnText');
                 refreshBtn.innerHTML = '<div class="loading"></div>';
 
-                // Get liquidity data
-                const rayverseLiq = await contract.methods.rayverseLiqudity().call();
-                const sonarTakaLiq = await contract.methods.sonarTakaLiquidity().call();
+                // Get liquidity data - use string conversion to avoid precision errors
+                const rayverseLiq = await contract.methods.checkRayverseLiquidity().call();
+                const sonarTakaLiq = await contract.methods.checkSonarTakaLiquidity().call();
                 
-                document.getElementById('rayverseLiquidity').textContent = parseFloat(web3.utils.fromWei(rayverseLiq, 'ether')).toFixed(4);
-                document.getElementById('sonarTakaLiquidity').textContent = parseFloat(web3.utils.fromWei(sonarTakaLiq, 'ether')).toFixed(4);
+                // Convert from wei to ether using Web3.js utils
+                const rayverseLiqEther = web3.utils.fromWei(rayverseLiq.toString(), 'ether');
+                const sonarTakaLiqEther = web3.utils.fromWei(sonarTakaLiq.toString(), 'ether');
+                
+                document.getElementById('rayverseLiquidity').textContent = parseFloat(rayverseLiqEther).toFixed(4);
+                document.getElementById('sonarTakaLiquidity').textContent = parseFloat(sonarTakaLiqEther).toFixed(4);
 
                 // Get user balances if connected
                 if (userAccount && isConnected) {
                     const rayverseBalance = await rayverseContract.methods.balanceOf(userAccount).call();
                     const sonarTakaBalance = await sonarTakaContract.methods.balanceOf(userAccount).call();
                     
-                    document.getElementById('userRayverseBalance').textContent = parseFloat(web3.utils.fromWei(rayverseBalance, 'ether')).toFixed(4);
-                    document.getElementById('userSonarTakaBalance').textContent = parseFloat(web3.utils.fromWei(sonarTakaBalance, 'ether')).toFixed(4);
+                    // Convert balances properly using Web3.js utils
+                    const rayverseBalanceEther = web3.utils.fromWei(rayverseBalance.toString(), 'ether');
+                    const sonarTakaBalanceEther = web3.utils.fromWei(sonarTakaBalance.toString(), 'ether');
+                    
+                    document.getElementById('userRayverseBalance').textContent = parseFloat(rayverseBalanceEther).toFixed(4);
+                    document.getElementById('userSonarTakaBalance').textContent = parseFloat(sonarTakaBalanceEther).toFixed(4);
                 } else {
                     document.getElementById('userRayverseBalance').textContent = '0.00';
                     document.getElementById('userSonarTakaBalance').textContent = '0.00';
                 }
 
                 refreshBtn.textContent = 'Refresh Data';
+                showToast('Data refreshed successfully!');
             } catch (error) {
                 console.error('Error refreshing data:', error);
                 showToast('Error refreshing data: ' + error.message, 'error');
@@ -1098,11 +1138,9 @@
             const fromAmount = document.getElementById('swapFromAmount');
             const toAmount = document.getElementById('swapToAmount');
             
-            // Clear inputs
             fromAmount.value = '';
             toAmount.value = '';
             
-            // Update token labels
             const tokenSelectors = document.querySelectorAll('.token-selector');
             if (isSwapReversed) {
                 tokenSelectors[0].innerHTML = '<div class="token-icon">S</div><span>SonarTaka (SNT)</span>';
@@ -1114,23 +1152,33 @@
         }
 
         // Calculate swap preview
-        document.getElementById('swapFromAmount').addEventListener('input', async function() {
-            const amount = this.value;
-            if (!amount || !contract) return;
+        document.addEventListener('DOMContentLoaded', function() {
+            const swapFromInput = document.getElementById('swapFromAmount');
+            if (swapFromInput) {
+                swapFromInput.addEventListener('input', async function() {
+                    const amount = this.value;
+                    if (!amount || !contract || parseFloat(amount) <= 0) {
+                        document.getElementById('swapToAmount').value = '';
+                        return;
+                    }
 
-            try {
-                const amountWei = web3.utils.toWei(amount, 'ether');
-                let result;
-                
-                if (isSwapReversed) {
-                    result = await contract.methods.checkPriceSonarTakaToRayverse(amountWei).call();
-                } else {
-                    result = await contract.methods.checkPriceRayverseToSonarTaka(amountWei).call();
-                }
-                
-                document.getElementById('swapToAmount').value = web3.utils.fromWei(result, 'ether');
-            } catch (error) {
-                console.error('Error calculating swap:', error);
+                    try {
+                        const amountWei = web3.utils.toWei(amount.toString(), 'ether');
+                        let result;
+                        
+                        if (isSwapReversed) {
+                            result = await contract.methods.checkPriceSonarTakaToRayverse(amountWei).call();
+                        } else {
+                            result = await contract.methods.checkPriceRayverseToSonarTaka(amountWei).call();
+                        }
+                        
+                        const resultEther = web3.utils.fromWei(result.toString(), 'ether');
+                        document.getElementById('swapToAmount').value = parseFloat(resultEther).toFixed(6);
+                    } catch (error) {
+                        console.error('Error calculating swap preview:', error);
+                        document.getElementById('swapToAmount').value = '';
+                    }
+                });
             }
         });
 
@@ -1151,19 +1199,32 @@
                 const swapBtn = document.getElementById('swapBtnText');
                 swapBtn.innerHTML = '<div class="loading"></div>';
                 
-                const amountWei = web3.utils.toWei(amount, 'ether');
+                const amountWei = web3.utils.toWei(amount.toString(), 'ether');
 
                 // Approve tokens first
                 const tokenContract = isSwapReversed ? sonarTakaContract : rayverseContract;
                 showToast('Approving tokens...', 'info');
-                await tokenContract.methods.approve(CONTRACT_ADDRESS, amountWei).send({from: userAccount});
+                
+                const gasLimit = 100000; // Set gas limit for approval
+                await tokenContract.methods.approve(CONTRACT_ADDRESS, amountWei).send({
+                    from: userAccount,
+                    gas: gasLimit
+                });
 
                 // Execute swap
                 showToast('Executing swap...', 'info');
+                const swapGasLimit = 200000; // Higher gas limit for swap
+                
                 if (isSwapReversed) {
-                    await contract.methods.swapSonarTakaToRayverse(amountWei).send({from: userAccount});
+                    await contract.methods.swapSonarTakaToRayverse(amountWei).send({
+                        from: userAccount,
+                        gas: swapGasLimit
+                    });
                 } else {
-                    await contract.methods.swapRayverseToSonarTaka(amountWei).send({from: userAccount});
+                    await contract.methods.swapRayverseToSonarTaka(amountWei).send({
+                        from: userAccount,
+                        gas: swapGasLimit
+                    });
                 }
 
                 showToast('Swap completed successfully!');
@@ -1177,6 +1238,10 @@
                 console.error('Error executing swap:', error);
                 if (error.code === 4001) {
                     showToast('Transaction rejected by user', 'error');
+                } else if (error.message.includes('insufficient funds')) {
+                    showToast('Insufficient balance for this transaction', 'error');
+                } else if (error.message.includes('gas')) {
+                    showToast('Transaction failed due to gas issues. Try again with higher gas limit.', 'error');
                 } else {
                     showToast('Swap failed: ' + (error.message || 'Unknown error'), 'error');
                 }
@@ -1199,12 +1264,19 @@
             }
 
             try {
-                const amountWei = web3.utils.toWei(amount, 'ether');
+                const amountWei = web3.utils.toWei(amount.toString(), 'ether');
                 showToast('Approving Rayverse tokens...', 'info');
-                await rayverseContract.methods.approve(CONTRACT_ADDRESS, amountWei).send({from: userAccount});
+                
+                await rayverseContract.methods.approve(CONTRACT_ADDRESS, amountWei).send({
+                    from: userAccount,
+                    gas: 100000
+                });
                 
                 showToast('Adding liquidity...', 'info');
-                await contract.methods.addLiquidityForRayverse(amountWei).send({from: userAccount});
+                await contract.methods.addLiquidityForRayverse(amountWei).send({
+                    from: userAccount,
+                    gas: 200000
+                });
                 
                 showToast('Rayverse liquidity added successfully!');
                 document.getElementById('rayverseAmount').value = '';
@@ -1232,12 +1304,19 @@
             }
 
             try {
-                const amountWei = web3.utils.toWei(amount, 'ether');
+                const amountWei = web3.utils.toWei(amount.toString(), 'ether');
                 showToast('Approving SonarTaka tokens...', 'info');
-                await sonarTakaContract.methods.approve(CONTRACT_ADDRESS, amountWei).send({from: userAccount});
+                
+                await sonarTakaContract.methods.approve(CONTRACT_ADDRESS, amountWei).send({
+                    from: userAccount,
+                    gas: 100000
+                });
                 
                 showToast('Adding liquidity...', 'info');
-                await contract.methods.addLiquidityForSonarTaka(amountWei).send({from: userAccount});
+                await contract.methods.addLiquidityForSonarTaka(amountWei).send({
+                    from: userAccount,
+                    gas: 200000
+                });
                 
                 showToast('SonarTaka liquidity added successfully!');
                 document.getElementById('sonarTakaAmount').value = '';
@@ -1267,17 +1346,26 @@
             }
 
             try {
-                const rayverseWei = web3.utils.toWei(rayverseAmount, 'ether');
-                const sonarTakaWei = web3.utils.toWei(sonarTakaAmount, 'ether');
+                const rayverseWei = web3.utils.toWei(rayverseAmount.toString(), 'ether');
+                const sonarTakaWei = web3.utils.toWei(sonarTakaAmount.toString(), 'ether');
                 
                 showToast('Approving Rayverse tokens...', 'info');
-                await rayverseContract.methods.approve(CONTRACT_ADDRESS, rayverseWei).send({from: userAccount});
+                await rayverseContract.methods.approve(CONTRACT_ADDRESS, rayverseWei).send({
+                    from: userAccount,
+                    gas: 100000
+                });
                 
                 showToast('Approving SonarTaka tokens...', 'info');
-                await sonarTakaContract.methods.approve(CONTRACT_ADDRESS, sonarTakaWei).send({from: userAccount});
+                await sonarTakaContract.methods.approve(CONTRACT_ADDRESS, sonarTakaWei).send({
+                    from: userAccount,
+                    gas: 100000
+                });
                 
                 showToast('Initializing liquidity pool...', 'info');
-                await contract.methods.initializeLiquidity(rayverseWei, sonarTakaWei).send({from: userAccount});
+                await contract.methods.initializeLiquidity(rayverseWei, sonarTakaWei).send({
+                    from: userAccount,
+                    gas: 300000
+                });
                 
                 showToast('Liquidity pool initialized successfully!');
                 document.getElementById('rayverseAmount').value = '';
@@ -1315,13 +1403,10 @@
         window.addEventListener('load', async () => {
             createParticles();
             
-            // Check if MetaMask is installed
             if (typeof window.ethereum !== 'undefined') {
-                // Check if already connected
                 try {
                     const accounts = await window.ethereum.request({ method: 'eth_accounts' });
                     if (accounts.length > 0) {
-                        // Auto-connect if already authorized
                         await connectWallet();
                     }
                 } catch (error) {
@@ -1329,15 +1414,9 @@
                 }
             }
             
-            // Initialize UI state
             updateWalletStatus();
             updateConnectButton();
         });
-
-        // Add Web3.js library
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/web3/1.10.0/web3.min.js';
-        document.head.appendChild(script);
     </script>
 </body>
 </html>
