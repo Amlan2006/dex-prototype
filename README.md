@@ -1,5 +1,5 @@
 ## Foundry
-forge script script/DeployDEX.s.sol:DeployScript --rpc-url http://127.0.0.1:8545 --private-key 
+forge script script/DeployDEX.s.sol:DeployScript --rpc-url http://127.0.0.1:8545 --private-key 0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e 
 **Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
 
 Foundry consists of:
