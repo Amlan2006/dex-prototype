@@ -3,6 +3,6 @@ pragma solidity ^0.8.0;
 import {ERC20} from "lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
  contract Rayverse is ERC20 {
     constructor() ERC20("Rayverse","RAY") {
-        _mint(msg.sender, 1000000 * 10 ** decimals());
+        _mint(msg.sender, 1000000*1e18);
     }
  }
