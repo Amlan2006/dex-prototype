@@ -521,232 +521,483 @@
 
     <script>
         // Contract configuration
-        const CONTRACT_ADDRESS = "0x..."; // Add your deployed contract address
+        const CONTRACT_ADDRESS = "0x8464135c8F25Da09e49BC8782676a84730C318bC"; // Add your deployed contract address
         const CONTRACT_ABI = [
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "_tokenA", "type": "address"},
-                    {"internalType": "address", "name": "_tokenB", "type": "address"}
-                ],
-                "stateMutability": "nonpayable",
-                "type": "constructor"
-            },
-            {
-                "inputs": [{"internalType": "address", "name": "token", "type": "address"}],
-                "type": "error",
-                "name": "SafeERC20FailedOperation"
-            },
-            {
-                "inputs": [{"internalType": "address", "name": "user", "type": "address"}],
-                "stateMutability": "view",
-                "type": "function",
-                "name": "LPsharesInPoolRayverse",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-            },
-            {
-                "inputs": [{"internalType": "address", "name": "user", "type": "address"}],
-                "stateMutability": "view",
-                "type": "function",
-                "name": "LPsharesInPoolSonarTaka",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-            },
-            {
-                "inputs": [{"internalType": "uint256", "name": "amount", "type": "uint256"}],
-                "stateMutability": "nonpayable",
-                "type": "function",
-                "name": "addLiquidityForRayverse"
-            },
-            {
-                "inputs": [{"internalType": "uint256", "name": "amount", "type": "uint256"}],
-                "stateMutability": "nonpayable",
-                "type": "function",
-                "name": "addLiquidityForSonarTaka"
-            },
-            {
-                "inputs": [{"internalType": "uint256", "name": "amount", "type": "uint256"}],
-                "stateMutability": "view",
-                "type": "function",
-                "name": "checkPriceRayverseToSonarTaka",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-            },
-            {
-                "inputs": [{"internalType": "uint256", "name": "amount", "type": "uint256"}],
-                "stateMutability": "view",
-                "type": "function",
-                "name": "checkPriceSonarTakaToRayverse",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-            },
-            {
-                "inputs": [{"internalType": "address", "name": "user", "type": "address"}],
-                "stateMutability": "view",
-                "type": "function",
-                "name": "checkRayverseBalance",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-            },
-            {
-                "inputs": [],
-                "stateMutability": "view",
-                "type": "function",
-                "name": "checkRayverseLiquidity",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-            },
-            {
-                "inputs": [{"internalType": "address", "name": "user", "type": "address"}],
-                "stateMutability": "view",
-                "type": "function",
-                "name": "checkSonarTakaBalance",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-            },
-            {
-                "inputs": [],
-                "stateMutability": "view",
-                "type": "function",
-                "name": "checkSonarTakaLiquidity",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-            },
-            {
-                "inputs": [],
-                "stateMutability": "view",
-                "type": "function",
-                "name": "feesVaultRayverse",
-                "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-            },
-            {
-                "inputs": [],
-                "stateMutability": "view",
-                "type": "function",
-                "name": "feesVaultSonarTaka",
-                "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-            },
-            {
-                "inputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function",
-                "name": "getSomeBalance"
-            },
-            {
-                "inputs": [
-                    {"internalType": "uint256", "name": "_rayverseAmount", "type": "uint256"},
-                    {"internalType": "uint256", "name": "_sonarTakaAmount", "type": "uint256"}
-                ],
-                "stateMutability": "nonpayable",
-                "type": "function",
-                "name": "initializeLiquidity"
-            },
-            {
-                "inputs": [{"internalType": "address", "name": "lpProviders", "type": "address"}],
-                "stateMutability": "view",
-                "type": "function",
-                "name": "liquidityProvidersRayverse",
-                "outputs": [{"internalType": "uint256", "name": "rayverseamount", "type": "uint256"}]
-            },
-            {
-                "inputs": [{"internalType": "address", "name": "lpProviders", "type": "address"}],
-                "stateMutability": "view",
-                "type": "function",
-                "name": "liquidityProvidersSonarTaka",
-                "outputs": [{"internalType": "uint256", "name": "sonarTakaAmount", "type": "uint256"}]
-            },
-            {
-                "inputs": [],
-                "stateMutability": "view",
-                "type": "function",
-                "name": "rayverse",
-                "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-            },
-            {
-                "inputs": [],
-                "stateMutability": "view",
-                "type": "function",
-                "name": "rayverseLiquidity",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-            },
-            {
-                "inputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function",
-                "name": "recieveFeesRayverse",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-            },
-            {
-                "inputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function",
-                "name": "recieveFeesSonarTaka",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-            },
-            {
-                "inputs": [{"internalType": "uint256", "name": "amount", "type": "uint256"}],
-                "stateMutability": "nonpayable",
-                "type": "function",
-                "name": "removeLiquidityForRayverse"
-            },
-            {
-                "inputs": [{"internalType": "uint256", "name": "amount", "type": "uint256"}],
-                "stateMutability": "nonpayable",
-                "type": "function",
-                "name": "removeLiquidityForSonarTaka"
-            },
-            {
-                "inputs": [],
-                "stateMutability": "view",
-                "type": "function",
-                "name": "sonarTaka",
-                "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-            },
-            {
-                "inputs": [],
-                "stateMutability": "view",
-                "type": "function",
-                "name": "sonarTakaLiquidity",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-            },
-            {
-                "inputs": [{"internalType": "uint256", "name": "amount", "type": "uint256"}],
-                "stateMutability": "nonpayable",
-                "type": "function",
-                "name": "swapRayverseToSonarTaka",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-            },
-            {
-                "inputs": [{"internalType": "uint256", "name": "amount", "type": "uint256"}],
-                "stateMutability": "nonpayable",
-                "type": "function",
-                "name": "swapSonarTakaToRayverse",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-            },
-            {
-                "inputs": [],
-                "stateMutability": "view",
-                "type": "function",
-                "name": "tokenA",
-                "outputs": [{"internalType": "contract IERC20", "name": "", "type": "address"}]
-            },
-            {
-                "inputs": [],
-                "stateMutability": "view",
-                "type": "function",
-                "name": "tokenB",
-                "outputs": [{"internalType": "contract IERC20", "name": "", "type": "address"}]
-            },
-            {
-                "inputs": [{"internalType": "address", "name": "user", "type": "address"}],
-                "stateMutability": "view",
-                "type": "function",
-                "name": "userToRayverseAmount",
-                "outputs": [{"internalType": "uint256", "name": "rayverseamount", "type": "uint256"}]
-            },
-            {
-                "inputs": [{"internalType": "address", "name": "user", "type": "address"}],
-                "stateMutability": "view",
-                "type": "function",
-                "name": "userToSonarTakaAmount",
-                "outputs": [{"internalType": "uint256", "name": "sonarTakaAmount", "type": "uint256"}]
-            }
+            
+                {
+                    "inputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "constructor"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "token",
+                            "type": "address"
+                        }
+                    ],
+                    "type": "error",
+                    "name": "SafeERC20FailedOperation"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "user",
+                            "type": "address"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "LPsharesInPoolRayverse",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "user",
+                            "type": "address"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "LPsharesInPoolSonarTaka",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "amount",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "nonpayable",
+                    "type": "function",
+                    "name": "addLiquidityForRayverse"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "amount",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "nonpayable",
+                    "type": "function",
+                    "name": "addLiquidityForSonarTaka"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "amount",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "checkPriceRayverseToSonarTaka",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "amount",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "checkPriceSonarTakaToRayverse",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "user",
+                            "type": "address"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "checkRayverseBalance",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "checkRayverseLiquidity",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "user",
+                            "type": "address"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "checkSonarTakaBalance",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "checkSonarTakaLiquidity",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "feesVaultRayverse",
+                    "outputs": [
+                        {
+                            "internalType": "address",
+                            "name": "",
+                            "type": "address"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "feesVaultSonarTaka",
+                    "outputs": [
+                        {
+                            "internalType": "address",
+                            "name": "",
+                            "type": "address"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [],
+                    "stateMutability": "payable",
+                    "type": "function",
+                    "name": "getSomeBalance"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "_rayverseAmount",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "_sonarTakaAmount",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "nonpayable",
+                    "type": "function",
+                    "name": "initializeLiquidity"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "lpProviders",
+                            "type": "address"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "liquidityProvidersRayverse",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "rayverseamount",
+                            "type": "uint256"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "lpProviders",
+                            "type": "address"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "liquidityProvidersSonarTaka",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "sonarTakaAmount",
+                            "type": "uint256"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "rayverse",
+                    "outputs": [
+                        {
+                            "internalType": "contract Rayverse",
+                            "name": "",
+                            "type": "address"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "rayverseLiquidity",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function",
+                    "name": "recieveFeesRayverse",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function",
+                    "name": "recieveFeesSonarTaka",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "amount",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "nonpayable",
+                    "type": "function",
+                    "name": "removeLiquidityForRayverse"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "amount",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "nonpayable",
+                    "type": "function",
+                    "name": "removeLiquidityForSonarTaka"
+                },
+                {
+                    "inputs": [],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "sonarTaka",
+                    "outputs": [
+                        {
+                            "internalType": "contract SonarTaka",
+                            "name": "",
+                            "type": "address"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "sonarTakaLiquidity",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "amount",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "nonpayable",
+                    "type": "function",
+                    "name": "swapRayverseToSonarTaka",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "amount",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "nonpayable",
+                    "type": "function",
+                    "name": "swapSonarTakaToRayverse",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "tokenA",
+                    "outputs": [
+                        {
+                            "internalType": "contract IERC20",
+                            "name": "",
+                            "type": "address"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "tokenB",
+                    "outputs": [
+                        {
+                            "internalType": "contract IERC20",
+                            "name": "",
+                            "type": "address"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "user",
+                            "type": "address"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "userToRayverseAmount",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "rayverseamount",
+                            "type": "uint256"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "user",
+                            "type": "address"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "userToSonarTakaAmount",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "sonarTakaAmount",
+                            "type": "uint256"
+                        }
+                    ]
+                }
+            
         ];
-
-        // Global variables
-        let provider, signer, contract, userAddress;
+                let provider, signer, contract, userAddress;
         let currentTradeMode = 'swap';
         let currentLiquidityMode = 'add';
 
