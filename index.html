@@ -379,7 +379,7 @@
 
                 <div id="swap-interface">
                     <div class="input-group">
-                        <label class="input-label">From</label>
+                        <label class="input-label" style="background-color: black;">From</label>
                         <select class="input-field" id="from-token" onchange="updateSwapDirection()">
                             <option value="rayverse">Rayverse (RAY)</option>
                             <option value="sonartaka">SonarTaka (STK)</option>
@@ -521,7 +521,7 @@
 
     <script>
         // Contract configuration
-        const CONTRACT_ADDRESS = "0x8464135c8F25Da09e49BC8782676a84730C318bC"; // Add your deployed contract address
+        const CONTRACT_ADDRESS = "0x057ef64E23666F000b34aE31332854aCBd1c8544"; // Add your deployed contract address
         const CONTRACT_ABI = [
             
                 {
@@ -756,6 +756,25 @@
                 {
                     "inputs": [
                         {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "liquidityProvidersRAY",
+                    "outputs": [
+                        {
+                            "internalType": "address",
+                            "name": "",
+                            "type": "address"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [
+                        {
                             "internalType": "address",
                             "name": "lpProviders",
                             "type": "address"
@@ -775,6 +794,25 @@
                 {
                     "inputs": [
                         {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "liquidityProvidersSTK",
+                    "outputs": [
+                        {
+                            "internalType": "address",
+                            "name": "",
+                            "type": "address"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [
+                        {
                             "internalType": "address",
                             "name": "lpProviders",
                             "type": "address"
@@ -787,6 +825,19 @@
                         {
                             "internalType": "uint256",
                             "name": "sonarTakaAmount",
+                            "type": "uint256"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "rayVerseFeesAmount",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
                             "type": "uint256"
                         }
                     ]
@@ -877,6 +928,19 @@
                             "internalType": "contract SonarTaka",
                             "name": "",
                             "type": "address"
+                        }
+                    ]
+                },
+                {
+                    "inputs": [],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "name": "sonarTakaFeesAmount",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
                         }
                     ]
                 },
@@ -997,7 +1061,7 @@
                 }
             
         ];
-                let provider, signer, contract, userAddress;
+        let provider, signer, contract, userAddress;
         let currentTradeMode = 'swap';
         let currentLiquidityMode = 'add';
 
@@ -1100,97 +1164,223 @@
 
         // Execute swap
         async function executeSwap() {
-            if (!contract) {
-                showNotification('Please connect your wallet first!', 'error');
-                return;
-            }
+    if (!contract) {
+        showNotification('Please connect your wallet first!', 'error');
+        return;
+    }
 
-            const amount = document.getElementById('swap-amount').value;
-            const fromToken = document.getElementById('from-token').value;
-            
-            if (!amount) {
-                showNotification('Please enter an amount!', 'error');
-                return;
-            }
+    const amount = document.getElementById('swap-amount').value;
+    const fromToken = document.getElementById('from-token').value;
+    
+    if (!amount) {
+        showNotification('Please enter an amount!', 'error');
+        return;
+    }
 
-            const loading = document.getElementById('swap-loading');
-            const btnText = document.getElementById('swap-btn-text');
+    const loading = document.getElementById('swap-loading');
+    const btnText = document.getElementById('swap-btn-text');
+    
+    loading.style.display = 'block';
+    btnText.textContent = 'Swapping...';
+
+    try {
+        const amountWei = ethers.parseEther(amount);
+        const contractAddress = await contract.getAddress();
+        let tx;
+        
+        if (fromToken === 'rayverse') {
+            // Get the Rayverse token contract
+            const rayverseAddress = await contract.tokenA();
+            const rayverseContract = new ethers.Contract(
+                rayverseAddress,
+                [
+                    'function approve(address spender, uint256 amount) returns (bool)',
+                    'function allowance(address owner, address spender) view returns (uint256)'
+                ],
+                signer
+            );
             
-            loading.style.display = 'block';
+            // Check current allowance
+            const userAddress = await signer.getAddress();
+            const currentAllowance = await rayverseContract.allowance(userAddress, contractAddress);
+            
+            // Only approve if current allowance is insufficient
+            if (currentAllowance < amountWei) {
+                btnText.textContent = 'Approving tokens...';
+                // Approve a larger amount to reduce future approval transactions
+                const largeAmount = ethers.parseEther("1000000"); // 1M tokens
+                const approveTx = await rayverseContract.approve(contractAddress, largeAmount);
+                await approveTx.wait();
+            }
+            
+            // Now execute the swap
             btnText.textContent = 'Swapping...';
-
-            try {
-                let tx;
-                if (fromToken === 'rayverse') {
-                    tx = await contract.swapRayverseToSonarTaka(amount);
-                } else {
-                    tx = await contract.swapSonarTakaToRayverse(amount);
-                }
-                
-                await tx.wait();
-                showNotification('Swap completed successfully!');
-                await updateAllData();
-                document.getElementById('swap-amount').value = '';
-                document.getElementById('price-preview').textContent = 'Enter amount to see price';
-            } catch (error) {
-                console.error('Swap failed:', error);
-                showNotification('Swap failed!', 'error');
-            } finally {
-                loading.style.display = 'none';
-                btnText.textContent = 'Swap Tokens';
+            tx = await contract.swapRayverseToSonarTaka(amount);
+        } else {
+            // Get the SonarTaka token contract
+            const sonarTakaAddress = await contract.tokenB();
+            const sonarTakaContract = new ethers.Contract(
+                sonarTakaAddress,
+                [
+                    'function approve(address spender, uint256 amount) returns (bool)',
+                    'function allowance(address owner, address spender) view returns (uint256)'
+                ],
+                signer
+            );
+            
+            // Check current allowance
+            const userAddress = await signer.getAddress();
+            const currentAllowance = await sonarTakaContract.allowance(userAddress, contractAddress);
+            
+            // Only approve if current allowance is insufficient
+            if (currentAllowance < amountWei) {
+                btnText.textContent = 'Approving tokens...';
+                // Approve a larger amount to reduce future approval transactions
+                const largeAmount = ethers.parseEther("1000000"); // 1M tokens
+                const approveTx = await sonarTakaContract.approve(contractAddress, largeAmount);
+                await approveTx.wait();
             }
+            
+            // Now execute the swap
+            btnText.textContent = 'Swapping...';
+            tx = await contract.swapSonarTakaToRayverse(amount);
         }
+        
+        await tx.wait();
+        showNotification('Swap completed successfully!');
+        await updateAllData();
+        document.getElementById('swap-amount').value = '';
+        document.getElementById('price-preview').textContent = 'Enter amount to see price';
+    } catch (error) {
+        console.error('Swap failed:', error);
+        
+        // More detailed error handling
+        if (error.reason) {
+            showNotification(`Swap failed: ${error.reason}`, 'error');
+        } else if (error.message.includes('insufficient funds')) {
+            showNotification('Insufficient funds for transaction!', 'error');
+        } else if (error.message.includes('user rejected')) {
+            showNotification('Transaction rejected by user!', 'error');
+        } else if (error.message.includes('Insufficient liquidity')) {
+            showNotification('Insufficient liquidity in the pool!', 'error');
+        } else if (error.message.includes('Pool not initialized')) {
+            showNotification('Liquidity pool not initialized!', 'error');
+        } else {
+            showNotification('Swap failed!', 'error');
+        }
+    } finally {
+        loading.style.display = 'none';
+        btnText.textContent = 'Swap Tokens';
+    }
+}
+
+// Helper function to check and approve tokens if needed
+async function ensureTokenApproval(tokenContract, contractAddress, amountNeeded) {
+    const userAddress = await signer.getAddress();
+    const currentAllowance = await tokenContract.allowance(userAddress, contractAddress);
+    
+    if (currentAllowance < amountNeeded) {
+        // Approve a larger amount to reduce future approval transactions
+        const largeAmount = ethers.parseEther("1000000");
+        const approveTx = await tokenContract.approve(contractAddress, largeAmount);
+        await approveTx.wait();
+        return true; // Approval was needed and executed
+    }
+    return false; // No approval needed
+}
 
         // Execute liquidity operation
         async function executeLiquidity() {
-            if (!contract) {
-                showNotification('Please connect your wallet first!', 'error');
-                return;
-            }
+    if (!contract) {
+        showNotification('Please connect your wallet first!', 'error');
+        return;
+    }
 
-            const amount = document.getElementById('liquidity-amount').value;
-            const token = document.getElementById('liquidity-token').value;
+    const amount = document.getElementById('liquidity-amount').value;
+    const token = document.getElementById('liquidity-token').value;
+    
+    if (!amount) {
+        showNotification('Please enter an amount!', 'error');
+        return;
+    }
+
+    const loading = document.getElementById('liquidity-loading');
+    const btnText = document.getElementById('liquidity-btn-text');
+    
+    loading.style.display = 'block';
+    btnText.textContent = currentLiquidityMode === 'add' ? 'Adding...' : 'Removing...';
+
+    try {
+        let tx;
+        if (currentLiquidityMode === 'add') {
+            // First, we need to approve the DEX contract to spend tokens
+            const amountWei = ethers.parseEther(amount);
             
-            if (!amount) {
-                showNotification('Please enter an amount!', 'error');
-                return;
-            }
-
-            const loading = document.getElementById('liquidity-loading');
-            const btnText = document.getElementById('liquidity-btn-text');
-            
-            loading.style.display = 'block';
-            btnText.textContent = currentLiquidityMode === 'add' ? 'Adding...' : 'Removing...';
-
-            try {
-                let tx;
-                if (currentLiquidityMode === 'add') {
-                    if (token === 'rayverse') {
-                        tx = await contract.addLiquidityForRayverse(amount);
-                    } else {
-                        tx = await contract.addLiquidityForSonarTaka(amount);
-                    }
-                } else {
-                    if (token === 'rayverse') {
-                        tx = await contract.removeLiquidityForRayverse(amount);
-                    } else {
-                        tx = await contract.removeLiquidityForSonarTaka(amount);
-                    }
-                }
+            if (token === 'rayverse') {
+                // Get the Rayverse token contract
+                const rayverseAddress = await contract.tokenA();
+                const rayverseContract = new ethers.Contract(
+                    rayverseAddress,
+                    ['function approve(address spender, uint256 amount) returns (bool)'],
+                    signer
+                );
                 
-                await tx.wait();
-                showNotification(`Liquidity ${currentLiquidityMode}ed successfully!`);
-                await updateAllData();
-                document.getElementById('liquidity-amount').value = '';
-            } catch (error) {
-                console.error('Liquidity operation failed:', error);
-                showNotification('Liquidity operation failed!', 'error');
-            } finally {
-                loading.style.display = 'none';
-                btnText.textContent = currentLiquidityMode === 'add' ? 'Add Liquidity' : 'Remove Liquidity';
+                // Approve the DEX to spend tokens
+                btnText.textContent = 'Approving tokens...';
+                const approveTx = await rayverseContract.approve(await contract.getAddress(), amountWei);
+                await approveTx.wait();
+                
+                // Now add liquidity
+                btnText.textContent = 'Adding liquidity...';
+                tx = await contract.addLiquidityForRayverse(amount);
+            } else {
+                // Get the SonarTaka token contract
+                const sonarTakaAddress = await contract.tokenB();
+                const sonarTakaContract = new ethers.Contract(
+                    sonarTakaAddress,
+                    ['function approve(address spender, uint256 amount) returns (bool)'],
+                    signer
+                );
+                
+                // Approve the DEX to spend tokens
+                btnText.textContent = 'Approving tokens...';
+                const approveTx = await sonarTakaContract.approve(await contract.getAddress(), amountWei);
+                await approveTx.wait();
+                
+                // Now add liquidity
+                btnText.textContent = 'Adding liquidity...';
+                tx = await contract.addLiquidityForSonarTaka(amount);
+            }
+        } else {
+            if (token === 'rayverse') {
+                tx = await contract.removeLiquidityForRayverse(amount);
+            } else {
+                tx = await contract.removeLiquidityForSonarTaka(amount);
             }
         }
-
+        
+        await tx.wait();
+        showNotification(`Liquidity ${currentLiquidityMode}ed successfully!`);
+        await updateAllData();
+        document.getElementById('liquidity-amount').value = '';
+    } catch (error) {
+        console.error('Liquidity operation failed:', error);
+        
+        // More detailed error handling
+        if (error.reason) {
+            showNotification(`Operation failed: ${error.reason}`, 'error');
+        } else if (error.message.includes('insufficient funds')) {
+            showNotification('Insufficient funds for transaction!', 'error');
+        } else if (error.message.includes('user rejected')) {
+            showNotification('Transaction rejected by user!', 'error');
+        } else {
+            showNotification('Liquidity operation failed!', 'error');
+        }
+    } finally {
+        loading.style.display = 'none';
+        btnText.textContent = currentLiquidityMode === 'add' ? 'Add Liquidity' : 'Remove Liquidity';
+    }
+}
         // Initialize pool
         async function initializePool() {
             if (!contract) {
@@ -1247,81 +1437,212 @@
         }
 
         // Collect fees
-        async function collectFees(tokenType) {
-            if (!contract) {
-                showNotification('Please connect your wallet first!', 'error');
-                return;
-            }
+        // Updated updateAllData function with fee display
+async function updateAllData() {
+    if (!contract || !userAddress) return;
 
-            const loadingId = tokenType === 'rayverse' ? 'ray-fees-loading' : 'stk-fees-loading';
-            const btnTextId = tokenType === 'rayverse' ? 'ray-fees-btn-text' : 'stk-fees-btn-text';
-            const loading = document.getElementById(loadingId);
-            const btnText = document.getElementById(btnTextId);
+    try {
+        // Update liquidity stats
+        const rayLiquidity = await contract.checkRayverseLiquidity();
+        const stkLiquidity = await contract.checkSonarTakaLiquidity();
+        
+        document.getElementById('ray-liquidity').textContent = 
+            parseFloat(ethers.formatEther(rayLiquidity)).toFixed(2);
+        document.getElementById('stk-liquidity').textContent = 
+            parseFloat(ethers.formatEther(stkLiquidity)).toFixed(2);
+
+        // Update user balances
+        const rayBalance = await contract.checkRayverseBalance(userAddress);
+        const stkBalance = await contract.checkSonarTakaBalance(userAddress);
+        
+        document.getElementById('ray-balance').textContent = 
+            parseFloat(ethers.formatEther(rayBalance)).toFixed(2);
+        document.getElementById('stk-balance').textContent = 
+            parseFloat(ethers.formatEther(stkBalance)).toFixed(2);
+
+        // Update user provided liquidity amounts
+        try {
+            const userRayLiquidity = await contract.liquidityProvidersRayverse(userAddress);
+            const userStkLiquidity = await contract.liquidityProvidersSonarTaka(userAddress);
             
-            loading.style.display = 'block';
-            btnText.textContent = 'Collecting...';
-
-            try {
-                let tx;
-                if (tokenType === 'rayverse') {
-                    tx = await contract.recieveFeesRayverse();
-                } else {
-                    tx = await contract.recieveFeesSonarTaka();
-                }
-                
-                await tx.wait();
-                showNotification(`${tokenType === 'rayverse' ? 'Rayverse' : 'SonarTaka'} fees collected successfully!`);
-                await updateAllData();
-            } catch (error) {
-                console.error('Fee collection failed:', error);
-                showNotification('Fee collection failed!', 'error');
-            } finally {
-                loading.style.display = 'none';
-                btnText.textContent = `Collect ${tokenType === 'rayverse' ? 'RAY' : 'STK'} Fees`;
-            }
+            document.getElementById('ray-provided').textContent = 
+                parseFloat(ethers.formatEther(userRayLiquidity)).toFixed(2);
+            document.getElementById('stk-provided').textContent = 
+                parseFloat(ethers.formatEther(userStkLiquidity)).toFixed(2);
+        } catch (error) {
+            document.getElementById('ray-provided').textContent = '0';
+            document.getElementById('stk-provided').textContent = '0';
         }
 
-        // Update all data
-        async function updateAllData() {
-            if (!contract || !userAddress) return;
+        // Update LP shares
+        try {
+            const rayShares = await contract.LPsharesInPoolRayverse(userAddress);
+            const stkShares = await contract.LPsharesInPoolSonarTaka(userAddress);
+            
+            const raySharesFormatted = parseFloat(ethers.formatEther(rayShares)).toFixed(2);
+            const stkSharesFormatted = parseFloat(ethers.formatEther(stkShares)).toFixed(2);
+            
+            document.getElementById('lp-shares').textContent = 
+                `RAY: ${raySharesFormatted}% | STK: ${stkSharesFormatted}%`;
+        } catch (error) {
+            document.getElementById('lp-shares').textContent = 'RAY: 0% | STK: 0%';
+        }
 
+        // Update available fees
+        await updateAvailableFees();
+
+    } catch (error) {
+        console.error('Error updating data:', error);
+    }
+}
+
+// New function to calculate and display available fees
+async function updateAvailableFees() {
+    if (!contract || !userAddress) return;
+
+    try {
+        // Get total fee amounts from the contract
+        const totalRayFees = await contract.rayVerseFeesAmount();
+        const totalStkFees = await contract.sonarTakaFeesAmount();
+        
+        // Calculate user's share of fees based on their LP shares
+        let userRayFees = 0;
+        let userStkFees = 0;
+        
+        try {
+            // Check if user has LP shares to avoid revert
+            const userRayLiquidity = await contract.liquidityProvidersRayverse(userAddress);
+            const userStkLiquidity = await contract.liquidityProvidersSonarTaka(userAddress);
+            
+            if (userRayLiquidity > 0) {
+                const rayShares = await contract.LPsharesInPoolRayverse(userAddress);
+                // Calculate user's share: (userShares / 100) * totalFees
+                userRayFees = (parseFloat(ethers.formatEther(rayShares)) / 100) * parseFloat(ethers.formatEther(totalRayFees));
+            }
+            
+            if (userStkLiquidity > 0) {
+                const stkShares = await contract.LPsharesInPoolSonarTaka(userAddress);
+                // Calculate user's share: (userShares / 100) * totalFees  
+                userStkFees = (parseFloat(ethers.formatEther(stkShares)) / 100) * parseFloat(ethers.formatEther(totalStkFees));
+            }
+        } catch (error) {
+            // User has no LP shares, fees remain 0
+            console.log('User has no LP shares:', error.message);
+        }
+
+        // Update the UI
+        document.getElementById('available-ray-fees').textContent = `${userRayFees.toFixed(4)} RAY`;
+        document.getElementById('available-stk-fees').textContent = `${userStkFees.toFixed(4)} STK`;
+        
+        // Optional: Show total pool fees for reference (you can add this to your HTML)
+        console.log(`Total pool fees - RAY: ${parseFloat(ethers.formatEther(totalRayFees)).toFixed(4)}, STK: ${parseFloat(ethers.formatEther(totalStkFees)).toFixed(4)}`);
+        
+    } catch (error) {
+        console.error('Error updating available fees:', error);
+        document.getElementById('available-ray-fees').textContent = '0 RAY';
+        document.getElementById('available-stk-fees').textContent = '0 STK';
+    }
+}
+
+// Enhanced collectFees function that also updates the display
+async function collectFees(tokenType) {
+    if (!contract) {
+        showNotification('Please connect your wallet first!', 'error');
+        return;
+    }
+
+    const loadingId = tokenType === 'rayverse' ? 'ray-fees-loading' : 'stk-fees-loading';
+    const btnTextId = tokenType === 'rayverse' ? 'ray-fees-btn-text' : 'stk-fees-btn-text';
+    const loading = document.getElementById(loadingId);
+    const btnText = document.getElementById(btnTextId);
+    
+    loading.style.display = 'block';
+    btnText.textContent = 'Collecting...';
+
+    try {
+        // Check if user has LP shares before attempting to collect fees
+        const userShares = tokenType === 'rayverse' 
+            ? await contract.LPsharesInPoolRayverse(userAddress)
+            : await contract.LPsharesInPoolSonarTaka(userAddress);
+
+        if (userShares == 0) {
+            showNotification(`You have no liquidity pool shares in ${tokenType === 'rayverse' ? 'Rayverse' : 'SonarTaka'} pool!`, 'error');
+            return;
+        }
+
+        // Check if there are fees to collect
+        const totalFees = tokenType === 'rayverse' 
+            ? await contract.rayVerseFeesAmount()
+            : await contract.sonarTakaFeesAmount();
+            
+        if (totalFees ==0) {
+            showNotification('No fees available to collect at this time!', 'error');
+            return;
+        }
+
+        let tx;
+        if (tokenType === 'rayverse') {
+            // Estimate gas first
             try {
-                // Update liquidity stats
-                const rayLiquidity = await contract.checkRayverseLiquidity();
-                const stkLiquidity = await contract.checkSonarTakaLiquidity();
-                
-                document.getElementById('ray-liquidity').textContent = 
-                    parseFloat(ethers.formatEther(rayLiquidity)).toFixed(2);
-                document.getElementById('stk-liquidity').textContent = 
-                    parseFloat(ethers.formatEther(stkLiquidity)).toFixed(2);
-
-                // Update user balances
-                const rayBalance = await contract.checkRayverseBalance(userAddress);
-                const stkBalance = await contract.checkSonarTakaBalance(userAddress);
-                
-                document.getElementById('ray-balance').textContent = 
-                    parseFloat(ethers.formatEther(rayBalance)).toFixed(2);
-                document.getElementById('stk-balance').textContent = 
-                    parseFloat(ethers.formatEther(stkBalance)).toFixed(2);
-
-                // Update LP shares
-                try {
-                    const rayShares = await contract.LPsharesInPoolRayverse(userAddress);
-                    const stkShares = await contract.LPsharesInPoolSonarTaka(userAddress);
-                    
-                    const raySharesFormatted = parseFloat(ethers.formatEther(rayShares)).toFixed(2);
-                    const stkSharesFormatted = parseFloat(ethers.formatEther(stkShares)).toFixed(2);
-                    
-                    document.getElementById('lp-shares').textContent = 
-                        `RAY: ${raySharesFormatted}% | STK: ${stkSharesFormatted}%`;
-                } catch (error) {
-                    document.getElementById('lp-shares').textContent = '0%';
-                }
-
-            } catch (error) {
-                console.error('Error updating data:', error);
+                const gasEstimate = await contract.recieveFeesRayverse.estimateGas();
+                tx = await contract.recieveFeesRayverse({ 
+                    gasLimit: gasEstimate * 120n / 100n // 20% buffer
+                });
+            } catch (gasError) {
+                // Fallback without gas estimation
+                tx = await contract.recieveFeesRayverse();
+            }
+        } else {
+            // Estimate gas first
+            try {
+                const gasEstimate = await contract.recieveFeesSonarTaka.estimateGas();
+                tx = await contract.recieveFeesSonarTaka({ 
+                    gasLimit: gasEstimate * 120n / 100n // 20% buffer
+                });
+            } catch (gasError) {
+                // Fallback without gas estimation
+                tx = await contract.recieveFeesSonarTaka();
             }
         }
+        
+        // Update button text to show waiting for confirmation
+        btnText.textContent = 'Confirming...';
+        
+        const receipt = await tx.wait();
+        
+        // Get the amount collected from the transaction receipt
+        const tokenName = tokenType === 'rayverse' ? 'Rayverse' : 'SonarTaka';
+        showNotification(`${tokenName} fees collected successfully!`, 'success');
+        
+        // Update all data to reflect the changes
+        await updateAllData();
+        
+    } catch (error) {
+        console.error('Fee collection failed:', error);
+        
+        // Parse the error message for better user feedback
+        const errorMessage = error.reason || error.message || error.toString();
+        
+        if (errorMessage.includes('No liquidity')) {
+            showNotification(`No liquidity available in ${tokenType === 'rayverse' ? 'Rayverse' : 'SonarTaka'} pool!`, 'error');
+        } else if (errorMessage.includes('No fees to collect')) {
+            showNotification('No fees available to collect at this time!', 'error');
+        } else if (errorMessage.includes('user rejected') || errorMessage.includes('User denied') || errorMessage.includes('rejected')) {
+            showNotification('Transaction cancelled by user.', 'error');
+        } else if (errorMessage.includes('insufficient funds') || errorMessage.includes('gas')) {
+            showNotification('Insufficient funds for gas fees.', 'error');
+        } else if (errorMessage.includes('network')) {
+            showNotification('Network error. Please check your connection and try again.', 'error');
+        } else {
+            showNotification('Fee collection failed. Please try again.', 'error');
+        }
+        
+    } finally {
+        // Reset UI elements
+        loading.style.display = 'none';
+        btnText.textContent = `Collect ${tokenType === 'rayverse' ? 'RAY' : 'STK'} Fees`;
+    }
+}
 
         // Format number with commas
         function formatNumber(num) {
